@@ -1,4 +1,4 @@
-Package: com.zengenuity.groupprice
+Package: civicrm_groupprice
 Copyright (C) 2014, Wayne Eaker <wayne@zengenuity.com>
 Licensed under the GNU Affero Public License 3.0 (below).
 

@@ -30,3 +30,7 @@ This extension provides a custom template for CRM/Price/Form/Option.tpl. If you
 have customize this template on your site, you will need to merge the changes from
 this extension into your custom template. The additions are noted with a comment in
 the template in this extension.
+
+## Credit
+This extension was written by Wayne Eaker and modeled after
+[qjensen's CiviCRM-Member-Pricing module](https://github.com/qjensen/CiviCRM-Member-Pricing).
