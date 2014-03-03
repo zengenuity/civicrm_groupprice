@@ -158,15 +158,15 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
 }
 
 /**
- * Get the smart groups for a given contact.
+ * Check if a group is a smart group, and if so, whether the contact is in the group
  *
- * @param $contactId
- *   the contact id to get groups for
- * @param int $active_groups
- *   only include active groups
- * @param int $group_limit
- *   the maximum the number of smart groups to query
- * @return array
+ * @param int $contactId
+ *   the contact id
+ * @param int $groupId
+ *   the group id
+ * @return mixed
+ *   If the user is in the group, returns an array of the group ID and title.
+ *   If the user is not in the group, returns FALSE.
  */
 function groupprice_contactIsInSmartGroup($contactId, $groupId) {
   $group_info = FALSE;
@@ -193,43 +193,6 @@ function groupprice_contactIsInSmartGroup($contactId, $groupId) {
     }
   }
   return $group_info;
-}
-
-/**
- * Get the smart groups for a given contact.
- *
- * @param $contactId
- *   the contact id to get groups for
- * @param int $active_groups
- *   only include active groups
- * @param int $group_limit
- *   the maximum the number of smart groups to query
- * @return array
- */
-function groupprice_getSmartGroupsForContact($contactId, $active_groups = TRUE, $group_limit = 10000) {
-  $smart_groups = array();
-  $result = civicrm_api('group', 'get', array(
-    'version' => 3,
-    'is_active' => (int) $active_groups,
-    'options' => array(
-      'limit' => $group_limit,
-    ),
-  ));
-  if (empty($result['is_error']) && !empty($result['values'])) {
-    foreach ($result['values'] as $g) {
-      if (!empty($g['saved_search_id'])) {
-        $group_result = civicrm_api('contact', 'get', array(
-          'version' => 3,
-          'contact_id' => $contactId,
-          'group_id' => $g['id']
-        ));
-        if (empty($group_result['is_error']) && !empty($group_result['values'])) {
-          $smart_groups[$g['id']] = $g['title'];
-        }
-      }
-    }
-  }
-  return $smart_groups;
 }
 
 /**
