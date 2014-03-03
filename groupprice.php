@@ -1,7 +1,5 @@
 <?php
 
-define('GROUPPRICE_OPEN_ADDITIONAL_PARTICIPANTS', TRUE);
-
 require_once 'groupprice.civix.php';
 
 /**
@@ -78,10 +76,6 @@ function groupprice_civicrm_postProcess($formName, &$form) {
  */
 function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
 
-  if (GROUPPRICE_OPEN_ADDITIONAL_PARTICIPANTS && preg_match('/^Participant_(\d+)$/', $form->getName())) {
-    return;
-  }
-
   // get the logged in user id
   $session = & CRM_Core_Session::singleton();
   $userID = $session->get('userID');
@@ -106,11 +100,8 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
     }
   }
 
-  // Now get smart groups.
-  if (!empty($userID)) {
-    $userSmartGroups = groupprice_getSmartGroupsForContact($userID);
-    $userGids += $userSmartGroups;
-  }
+  // We will check smart groups as needed.
+  $smartGroupsChecked = array();
 
   foreach ($amount as &$priceSetSettings) {
     $optionList = & $priceSetSettings['options'];
@@ -119,6 +110,17 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
       if (empty($acl['gids'])) {
         // No group restrictions.
         continue;
+      }
+
+      // Check for smart groups in the list of ACLs.
+      foreach ($acl['gids'] as $gid) {
+        if (!in_array($gid, $smartGroupsChecked)) {
+          $groupMembership = groupprice_contactIsInSmartGroup($userID, $gid);
+          if (!empty($groupMembership)) {
+            $userGids += $groupMembership;
+          }
+          $smartGroupsChecked[$gid] = $gid;
+        }
       }
 
       $hide = FALSE;
@@ -153,6 +155,44 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
       }
     }
   }
+}
+
+/**
+ * Get the smart groups for a given contact.
+ *
+ * @param $contactId
+ *   the contact id to get groups for
+ * @param int $active_groups
+ *   only include active groups
+ * @param int $group_limit
+ *   the maximum the number of smart groups to query
+ * @return array
+ */
+function groupprice_contactIsInSmartGroup($contactId, $groupId) {
+  $group_info = FALSE;
+
+  // First, determine if this is a smart group.
+  $result = civicrm_api('group', 'get', array(
+    'version' => 3,
+    'group_id' => $groupId,
+  ));
+  if (empty($result['is_error']) && !empty($result['values'])) {
+    foreach ($result['values'] as $g) {
+      if (!empty($g['saved_search_id'])) {
+
+        // It is a smart group, let's check if user is a member.
+        $group_result = civicrm_api('contact', 'get', array(
+          'version' => 3,
+          'contact_id' => $contactId,
+          'group_id' => $g['id']
+        ));
+        if (empty($group_result['is_error']) && !empty($group_result['values'])) {
+          $group_info[$g['id']] = $g['title'];
+        }
+      }
+    }
+  }
+  return $group_info;
 }
 
 /**
