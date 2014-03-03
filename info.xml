@@ -14,8 +14,7 @@
   <compatibility>
     <ver>4.4</ver>
   </compatibility>
-  <comments>This extension works with both static and smart groups, but note that performance may suffer
-  with a large number of smart groups.</comments>
+  <comments>This extension works with both static and smart groups.</comments>
   <civix>
     <namespace>CRM/Groupprice</namespace>
   </civix>
