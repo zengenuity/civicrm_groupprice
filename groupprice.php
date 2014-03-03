@@ -103,9 +103,8 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
   // We will check smart groups as needed.
   $smartGroupsChecked = array();
 
-  foreach ($amount as &$priceSetSettings) {
-    $optionList = & $priceSetSettings['options'];
-    foreach ($optionList as &$priceOption) {
+  foreach ($amount as $amount_id => $priceSetSettings) {
+    foreach ($priceSetSettings['options'] as $priceOption) {
       $acl = groupprice_getAcls($priceOption['id']);
       if (empty($acl['gids'])) {
         // No group restrictions.
@@ -143,13 +142,13 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
       // Otherwise, really hide them.
       if ($hide) {
         if ($isAdmin) {
-          $optionList[$priceOption['id']]['label'] .= '<em class="civicrm-groupprice-admin-message"> (visible by admin access)</em>';
+          $amount[$amount_id]['options'][$priceOption['id']]['label'] .= '<em class="civicrm-groupprice-admin-message"> (visible by admin access)</em>';
         }
         else {
-          $removed = $optionList[$priceOption['id']];
-          unset($optionList[$priceOption['id']]);
-          if ($removed['is_default'] && !empty($optionList)) {
-            $optionList[reset(array_keys($optionList))]['is_default'] = 1;
+          $removed = $amount[$amount_id]['options'][$priceOption['id']];
+          unset($amount[$amount_id]['options'][$priceOption['id']]);
+          if ($removed['is_default'] && !empty($amount[$amount_id]['options'])) {
+            $amount[$amount_id]['options'][reset(array_keys($amount[$amount_id]['options']))]['is_default'] = 1;
           }
         }
       }
