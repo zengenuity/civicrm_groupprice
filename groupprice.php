@@ -112,13 +112,15 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
       }
 
       // Check for smart groups in the list of ACLs.
-      foreach ($acl['gids'] as $gid) {
-        if (!in_array($gid, $smartGroupsChecked)) {
-          $groupMembership = groupprice_contactIsInSmartGroup($userID, $gid);
-          if (!empty($groupMembership)) {
-            $userGids += $groupMembership;
+      if (!empty($userID)) {
+        foreach ($acl['gids'] as $gid) {
+          if (!in_array($gid, $smartGroupsChecked)) {
+            $groupMembership = groupprice_contactIsInSmartGroup($userID, $gid);
+            if (!empty($groupMembership)) {
+              $userGids += $groupMembership;
+            }
+            $smartGroupsChecked[$gid] = $gid;
           }
-          $smartGroupsChecked[$gid] = $gid;
         }
       }
 
@@ -183,7 +185,7 @@ function groupprice_contactIsInSmartGroup($contactId, $groupId) {
         $group_result = civicrm_api('contact', 'get', array(
           'version' => 3,
           'contact_id' => $contactId,
-          'group_id' => $g['id']
+          'group' => $g['id']
         ));
         if (empty($group_result['is_error']) && !empty($group_result['values'])) {
           $group_info[$g['id']] = $g['title'];
