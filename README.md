@@ -2,8 +2,7 @@
 This CiviCRM extension allows you to limit the display of individual prices in
 price sets to specific groups. This allows you to implement things like
 members-only pricing for events. (by using a Smart Group to track current
-members) This extension works with both static and smart groups, but note
-that performance may suffer with a large number of smart groups.
+members) This extension works with both static and smart groups.
 
 ## Installation
 1. Copy the civicrm_groupprice folder into your CiviCRM extensions directory.
