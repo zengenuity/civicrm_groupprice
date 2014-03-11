@@ -8,7 +8,7 @@ that performance may suffer with a large number of smart groups.
 ## Installation
 1. Copy the civicrm_groupprice folder into your CiviCRM extensions directory.
 2. Go to Administer > System Settings > Manage Extensions.
-3. Enable the "Limit Prices by Group" extension.
+3. Enable the "Group-Based Pricing" extension.
 
 ## Usage
 This extension adds two fields to the price option form found under
