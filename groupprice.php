@@ -204,11 +204,15 @@ function groupprice_contactIsInSmartGroup($contactId, $groupId) {
 function groupprice_getGroupList() {
   $groups = array();
 
-  $params = array('version' => 3,
-    'sequential' => 1,);
-  $result = civicrm_api( 'group','get',$params );
+  $params = array(
+    'version' => 3,
+    'options' => array('limit' => 10000, 'sort' => 'title'),
+    'sequential' => 1,
+  );
+  $result = civicrm_api('group', 'get', $params);
+
   foreach ($result['values'] as $group) {
-    $groups[$group['id']] = $group['name'];
+    $groups[$group['id']] = $group['title'];
 
   }
   return $groups;
