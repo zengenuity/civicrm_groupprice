@@ -1,32 +1,16 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.7                                                |
- +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2017                                |
- +--------------------------------------------------------------------+
- | This file is a part of CiviCRM.                                    |
+ | Copyright CiviCRM LLC. All rights reserved.                        |
  |                                                                    |
- | CiviCRM is free software; you can copy, modify, and distribute it  |
- | under the terms of the GNU Affero General Public License           |
- | Version 3, 19 November 2007 and the CiviCRM Licensing Exception.   |
- |                                                                    |
- | CiviCRM is distributed in the hope that it will be useful, but     |
- | WITHOUT ANY WARRANTY; without even the implied warranty of         |
- | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.               |
- | See the GNU Affero General Public License for more details.        |
- |                                                                    |
- | You should have received a copy of the GNU Affero General Public   |
- | License and the CiviCRM Licensing Exception along                  |
- | with this program; if not, contact CiviCRM LLC                     |
- | at info[AT]civicrm[DOT]org. If you have questions about the        |
- | GNU Affero General Public License or the licensing of CiviCRM,     |
- | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
+ | This work is published under the GNU AGPLv3 license with some      |
+ | permitted exceptions and without any warranty. For full license    |
+ | and copyright information, see https://civicrm.org/licensing       |
  +--------------------------------------------------------------------+
 *}
 <div class="crm-form-block">
   {if $action eq 8}
     <div class="messages status no-popup">
-      <div class="icon inform-icon"></div>
+      {icon icon="fa-info-circle"}{/icon}
       {ts}WARNING: Deleting this option will result in the loss of all data.{/ts} {ts}This action cannot be undone.{/ts} {ts}Do you want to continue?{/ts}
     </div>
   {else}
@@ -106,6 +90,10 @@
         <td>{$form.is_default.html}</td>
       </tr>
       {/if}
+      <tr class="crm-price-field-form-block-visibility_id">
+        <td class="label">{$form.visibility_id.label}</td>
+        <td>&nbsp;{$form.visibility_id.html} {help id="id-visibility-options" file="CRM/Price/Page/Field.hlp"}</td>
+      </tr>
       {* Limit Prices by Group: Start of code addition *}
       {if $action eq 2}
         <tr class="crm-price-option-form-groupprice_gids"></tr>
@@ -142,4 +130,3 @@
   </div>
 
 </div>
-
