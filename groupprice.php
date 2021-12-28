@@ -179,7 +179,7 @@ function groupprice_contactIsInGroup($contactId, $groupId) {
     'group_id' => $groupId
   ));
   if (empty($group_result['is_error']) && !empty($group_result['values'])) {
-    foreach ($result['values'] as $g) {
+    foreach ($group_result['values'] as $g) {
       $group_info[$g['group_id']] = $g['title'];
     }
   }
