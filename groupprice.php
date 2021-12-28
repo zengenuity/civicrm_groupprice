@@ -115,7 +115,7 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
       if (!empty($userID)) {
         foreach ($acl['gids'] as $gid) {
           if (!in_array($gid, $smartGroupsChecked)) {
-            $groupMembership = groupprice_contactIsInSmartGroup($userID, $gid);
+            $groupMembership = groupprice_contactIsInGroup($userID, $gid);
             if (!empty($groupMembership)) {
               $userGids += $groupMembership;
             }
@@ -159,7 +159,7 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
 }
 
 /**
- * Check if a group is a smart group, and if so, whether the contact is in the group
+ * Check whether the contact is in the group
  *
  * @param int $contactId
  *   the contact id
@@ -169,28 +169,19 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
  *   If the user is in the group, returns an array of the group ID and title.
  *   If the user is not in the group, returns FALSE.
  */
-function groupprice_contactIsInSmartGroup($contactId, $groupId) {
+function groupprice_contactIsInGroup($contactId, $groupId) {
   $group_info = FALSE;
 
   // First, determine if this is a smart group.
-  $result = civicrm_api('group', 'get', array(
+  // It is a smart group, let's check if user is a member.
+  $group_result = civicrm_api('GroupContact', 'get', array(
     'version' => 3,
-    'group_id' => $groupId,
+    'contact_id' => $contactId,
+    'group_id' => $groupId
   ));
-  if (empty($result['is_error']) && !empty($result['values'])) {
+  if (empty($group_result['is_error']) && !empty($group_result['values'])) {
     foreach ($result['values'] as $g) {
-      if (!empty($g['saved_search_id'])) {
-
-        // It is a smart group, let's check if user is a member.
-        $group_result = civicrm_api('contact', 'get', array(
-          'version' => 3,
-          'contact_id' => $contactId,
-          'group' => $g['id']
-        ));
-        if (empty($group_result['is_error']) && !empty($group_result['values'])) {
-          $group_info[$g['id']] = $g['title'];
-        }
-      }
+      $group_info[$g['group_id']] = $g['title'];
     }
   }
   return $group_info;
