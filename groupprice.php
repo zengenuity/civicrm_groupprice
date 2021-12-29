@@ -124,18 +124,18 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
         }
       }
 
-      $hide = FALSE;
+      $hide = TRUE;
       foreach ($acl['gids'] as $gid) {
         if (!$acl['negate']) {
           // Only members of the group can see it.
-          if (!array_key_exists($gid, $userGids)) {
-            $hide = TRUE;
+          if (array_key_exists($gid, $userGids)) {
+            $hide = FALSE;
           }
         }
         else {
           // Negated filtering. Only non-members can see it.
-          if (array_key_exists($gid, $userGids)) {
-            $hide = TRUE;
+          if (!array_key_exists($gid, $userGids)) {
+            $hide = FALSE;
           }
         }
       }
