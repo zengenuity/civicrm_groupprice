@@ -109,52 +109,54 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
 
   foreach ($amount as $amount_id => $priceSetSettings) {
     foreach ($priceSetSettings['options'] as $priceOption) {
-      $acl = groupprice_getAcls($priceOption['id']);
-      if (empty($acl['gids'])) {
-        // No group restrictions.
-        continue;
-      }
+      if ( array_key_exists( 'id', $priceOption ) ) {
+        $acl = groupprice_getAcls($priceOption['id']);
+        if (empty($acl['gids'])) {
+          // No group restrictions.
+          continue;
+        }
 
-      // Check for smart groups in the list of ACLs.
-      if (!empty($userID)) {
-        foreach ($acl['gids'] as $gid) {
-          if (!in_array($gid, $smartGroupsChecked)) {
-            $groupMembership = groupprice_contactIsInSmartGroup($userID, $gid);
-            if (!empty($groupMembership)) {
-              $userGids += $groupMembership;
+        // Check for smart groups in the list of ACLs.
+        if (!empty($userID)) {
+          foreach ($acl['gids'] as $gid) {
+            if (!in_array($gid, $smartGroupsChecked)) {
+              $groupMembership = groupprice_contactIsInSmartGroup($userID, $gid);
+              if (!empty($groupMembership)) {
+                $userGids += $groupMembership;
+              }
+              $smartGroupsChecked[$gid] = $gid;
             }
-            $smartGroupsChecked[$gid] = $gid;
           }
         }
-      }
 
-      $hide = TRUE;
-      foreach ($acl['gids'] as $gid) {
-        if (!$acl['negate']) {
-          // Only members of the group can see it.
-          if (array_key_exists($gid, $userGids)) {
-            $hide = FALSE;
+        $hide = TRUE;
+        foreach ($acl['gids'] as $gid) {
+          if (!$acl['negate']) {
+            // Only members of the group can see it.
+            if (array_key_exists($gid, $userGids)) {
+              $hide = FALSE;
+            }
+          }
+          else {
+            // Negated filtering. Only non-members can see it.
+            if (!array_key_exists($gid, $userGids)) {
+              $hide = FALSE;
+            }
           }
         }
-        else {
-          // Negated filtering. Only non-members can see it.
-          if (!array_key_exists($gid, $userGids)) {
-            $hide = FALSE;
-          }
-        }
-      }
 
-      // If the user is an admin, just put a message next to the "hidden" options.
-      // Otherwise, really hide them.
-      if ($hide) {
-        if ($isAdmin) {
-          $amount[$amount_id]['options'][$priceOption['id']]['label'] .= '<em class="civicrm-groupprice-admin-message"> (visible by admin access)</em>';
-        }
-        else {
-          $removed = $amount[$amount_id]['options'][$priceOption['id']];
-          unset($amount[$amount_id]['options'][$priceOption['id']]);
-          if ($removed['is_default'] && !empty($amount[$amount_id]['options'])) {
-            $amount[$amount_id]['options'][reset(array_keys($amount[$amount_id]['options']))]['is_default'] = 1;
+        // If the user is an admin, just put a message next to the "hidden" options.
+        // Otherwise, really hide them.
+        if ($hide) {
+          if ($isAdmin) {
+            $amount[$amount_id]['options'][$priceOption['id']]['label'] .= '<em class="civicrm-groupprice-admin-message"> (visible by admin access)</em>';
+          }
+          else {
+            $removed = $amount[$amount_id]['options'][$priceOption['id']];
+            unset($amount[$amount_id]['options'][$priceOption['id']]);
+            if ($removed['is_default'] && !empty($amount[$amount_id]['options'])) {
+              $amount[$amount_id]['options'][reset(array_keys($amount[$amount_id]['options']))]['is_default'] = 1;
+            }
           }
         }
       }
