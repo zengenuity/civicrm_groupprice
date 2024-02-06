@@ -76,9 +76,13 @@ function groupprice_civicrm_postProcess($formName, &$form) {
  */
 function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
 
-  // get the logged in user id
-  $session = & CRM_Core_Session::singleton();
-  $userID = $session->get('userID');
+  //  Check to see if the contact ID is set in the form or not.
+  if ( property_exists( $form, '_contactID' ) && !empty( $form->_contactID ) ) {
+		$userID = $form->_contactID;
+	} else {
+    //  Contact not set in form so lets check for other options
+		$userID = groupprice_civicrm_getUser();
+	}
 
   // First get the static groups
   $isAdmin = FALSE;
@@ -105,52 +109,54 @@ function groupprice_civicrm_buildAmount($pageType, &$form, &$amount) {
 
   foreach ($amount as $amount_id => $priceSetSettings) {
     foreach ($priceSetSettings['options'] as $priceOption) {
-      $acl = groupprice_getAcls($priceOption['id']);
-      if (empty($acl['gids'])) {
-        // No group restrictions.
-        continue;
-      }
+      if ( array_key_exists( 'id', $priceOption ) ) {
+        $acl = groupprice_getAcls($priceOption['id']);
+        if (empty($acl['gids'])) {
+          // No group restrictions.
+          continue;
+        }
 
-      // Check for smart groups in the list of ACLs.
-      if (!empty($userID)) {
-        foreach ($acl['gids'] as $gid) {
-          if (!in_array($gid, $smartGroupsChecked)) {
-            $groupMembership = groupprice_contactIsInSmartGroup($userID, $gid);
-            if (!empty($groupMembership)) {
-              $userGids += $groupMembership;
+        // Check for smart groups in the list of ACLs.
+        if (!empty($userID)) {
+          foreach ($acl['gids'] as $gid) {
+            if (!in_array($gid, $smartGroupsChecked)) {
+              $groupMembership = groupprice_contactIsInSmartGroup($userID, $gid);
+              if (!empty($groupMembership)) {
+                $userGids += $groupMembership;
+              }
+              $smartGroupsChecked[$gid] = $gid;
             }
-            $smartGroupsChecked[$gid] = $gid;
           }
         }
-      }
 
-      $hide = FALSE;
-      foreach ($acl['gids'] as $gid) {
-        if (!$acl['negate']) {
-          // Only members of the group can see it.
-          if (!array_key_exists($gid, $userGids)) {
-            $hide = TRUE;
+        $hide = TRUE;
+        foreach ($acl['gids'] as $gid) {
+          if (!$acl['negate']) {
+            // Only members of the group can see it.
+            if (array_key_exists($gid, $userGids)) {
+              $hide = FALSE;
+            }
+          }
+          else {
+            // Negated filtering. Only non-members can see it.
+            if (!array_key_exists($gid, $userGids)) {
+              $hide = FALSE;
+            }
           }
         }
-        else {
-          // Negated filtering. Only non-members can see it.
-          if (array_key_exists($gid, $userGids)) {
-            $hide = TRUE;
-          }
-        }
-      }
 
-      // If the user is an admin, just put a message next to the "hidden" options.
-      // Otherwise, really hide them.
-      if ($hide) {
-        if ($isAdmin) {
-          $amount[$amount_id]['options'][$priceOption['id']]['label'] .= '<em class="civicrm-groupprice-admin-message"> (visible by admin access)</em>';
-        }
-        else {
-          $removed = $amount[$amount_id]['options'][$priceOption['id']];
-          unset($amount[$amount_id]['options'][$priceOption['id']]);
-          if ($removed['is_default'] && !empty($amount[$amount_id]['options'])) {
-            $amount[$amount_id]['options'][reset(array_keys($amount[$amount_id]['options']))]['is_default'] = 1;
+        // If the user is an admin, just put a message next to the "hidden" options.
+        // Otherwise, really hide them.
+        if ($hide) {
+          if ($isAdmin) {
+            $amount[$amount_id]['options'][$priceOption['id']]['label'] .= '<em class="civicrm-groupprice-admin-message"> (visible by admin access)</em>';
+          }
+          else {
+            $removed = $amount[$amount_id]['options'][$priceOption['id']];
+            unset($amount[$amount_id]['options'][$priceOption['id']]);
+            if ($removed['is_default'] && !empty($amount[$amount_id]['options'])) {
+              $amount[$amount_id]['options'][reset(array_keys($amount[$amount_id]['options']))]['is_default'] = 1;
+            }
           }
         }
       }
@@ -235,6 +241,55 @@ function groupprice_getAcls($oid) {
     $aces['negate'] = $dao->negate;
   }
   return $aces;
+}
+
+/**
+ * Gets the current user. Checks for one of the following;
+ * cid, select_contact_id, logged in user
+ *
+ * @return mixed
+ * Will return null if nothing is found or ID isn't numeric
+ * Will return a integer of either 0 or the user ID
+ */
+function groupprice_civicrm_getUser() {
+	$tempID = CRM_Utils_Request::retrieve('cid', 'Positive');
+
+  // check if there is an On-Behalf Of ID specified. For public and admin use
+	$select_contact_id = CRM_Utils_Request::retrieve('select_contact_id', 'Positive');
+	if ( !empty( $select_contact_id ) ) {
+		$tempID = $select_contact_id;
+	}
+
+	// force to ignore the authenticated user
+	if ($tempID === '0' || $tempID === 0) {
+		// we set the cid on the form so that this will be retained for the Confirm page
+		// in the multi-page form & prevent us returning the $userID when this is called
+		// from that page
+		// we don't really need to set it when $tempID is set because the params have that stored
+		return (int) $tempID;
+	}
+
+  // Check for logged in user based on session
+	$userID = CRM_Core_Session::getLoggedInContactID();
+
+	if (!is_null($tempID) && $tempID === $userID) {
+		return (int) $userID;
+	}
+
+	// check if this is a checksum authentication
+	$userChecksum = CRM_Utils_Request::retrieve('cs', 'String');
+	if ($userChecksum) {
+		//check for anonymous user.
+		$validUser = CRM_Contact_BAO_Contact_Utils::validChecksum($tempID, $userChecksum);
+		if ($validUser) {
+			return $tempID;
+		}
+	}
+	// check if user has permission, CRM-12062
+	elseif ($tempID && CRM_Contact_BAO_Contact_Permission::allow($tempID)) {
+		return $tempID;
+	}
+	return is_numeric($userID) ? $userID : NULL;
 }
 
 /**
