@@ -1,0 +1,5 @@
+{
+    "name": "civicrm/groupprice",
+    "description": "Allows you to limit the display of individual prices in price sets to specific groups. In addition, you can create members-only prices, by using a smart group for current members.",
+    "type": "civicrm-ext"
+}
