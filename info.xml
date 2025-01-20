@@ -13,10 +13,17 @@
   <version>1.0</version>
   <develStage>stable</develStage>
   <compatibility>
-    <ver>4.4</ver>
+    <ver>5.80</ver>
   </compatibility>
   <comments>This extension works with both static and smart groups.</comments>
   <civix>
     <namespace>CRM/Groupprice</namespace>
+    <format>23.02.1</format>
   </civix>
+  <mixins>
+    <mixin>smarty-v2@1.0.1</mixin>
+  </mixins>
+  <classloader>
+    <psr4 prefix="Civi\" path="Civi"/>
+  </classloader>
 </extension>
