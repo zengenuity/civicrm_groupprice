@@ -1,3 +1,5 @@
+# THIS PROJECT HAS MOVED TO https://lab.civicrm.org/extensions/civicrm_groupprice
+
 ## Introduction
 This CiviCRM extension allows you to limit the display of individual prices in
 price sets to specific groups. This allows you to implement things like
